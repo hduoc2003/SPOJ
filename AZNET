@@ -1,0 +1,111 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+#define foru( i, a, b ) for( int i=a; i<=b; i++ )
+#define ps push_back
+#define fr freopen
+
+using namespace std;
+
+typedef struct { int u,v,id; } edge;
+
+int t;
+
+struct dsu
+{
+    vector < int > pa;
+    dsu( int n ) : pa( n, -1 ){ };
+
+    int find( int u )
+    {
+        return pa[u] < 0 ? u : pa[u] = find( pa[u] );
+    }
+
+    bool join( int u, int v )
+    {
+        if ( ( u = find( u ) ) == ( v = find( v ) ) )
+            return 0;
+        if ( pa[u] > pa[v] )
+            pa[v] += pa[u], pa[u] = v;
+        else
+            pa[u] += pa[v], pa[v] = u;
+        return 1;
+    }
+
+    void reset()
+    {
+        fill( pa.begin(), pa.end(), -1 );
+    }
+};
+
+void solve()
+{
+    cin>>t;
+    while ( t-- )
+    {
+        int n,m;
+        cin>>n>>m;
+        dsu s( n+1 );
+        vector < int > wa( n ), wb( n );
+        foru( i, 1, n-1 )
+            cin>>wa[i];
+        foru( i, 1, n-1 )
+            cin>>wb[i];
+        vector < edge > a,b;
+        foru( i, 1, m )
+        {
+            int u,v,type;
+            cin>>u>>v>>type;
+            if ( type == 1 )
+                a.ps( { u, v, i } );
+            else
+                b.ps( { u, v, i } );
+        }
+        int amin,amax = 0,bmax = 0;
+        for( edge& u : a )
+            amax += s.join( u.u, u.v );
+        s.reset();
+        for( edge& u : b )
+            bmax += s.join( u.u, u.v );
+        amin = n-2-bmax;
+        int tmp = 2e9, k;
+        while ( ++amin <= amax )
+            if ( tmp > wa[amin] + wb[n-1-amin] )
+            {
+                tmp = wa[amin] + wb[n-1-amin];
+                k = amin;
+            }
+        vector < bool > res( m+1 );
+        s.reset();
+        for( edge& u : b )
+            s.join( u.u, u.v );
+        for( edge& u : a )
+            res[u.id] = s.join( u.u, u.v );
+        s.reset();
+        for( edge& u : a )
+            if ( res[u.id] )
+                s.join( u.u, u.v ), k--;
+        if ( k )
+            for( edge& u : a )
+                if ( s.join( u.u, u.v ) )
+                {
+                    res[u.id] = 1, k--;
+                    if ( !k )
+                        break;
+                }
+        for( edge& u : b )
+            res[u.id] = s.join( u.u, u.v );
+        foru( i, 1, m )
+            if ( res[i] )
+                cout<<i<<" ";
+        cout<<'\n';
+    }
+}
+
+int main()
+{
+    ios_base :: sync_with_stdio( false ); cin.tie(0);
+    //fr( "1.txt", "r", stdin );
+    solve();
+}
