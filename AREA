@@ -1,0 +1,118 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <algorithm>
+#include <math.h>
+#include <string.h>
+#include <limits.h>
+#include <numeric>
+#include <vector>
+#include <queue>
+#include <stack>
+#include <map>
+#include <set>
+#include <array>
+#include <unordered_map>
+ 
+#define foru( i, a, b ) for( int i = a; i <= b; i++ )
+#define ford( i, a, b ) for( int i = a; i >= b; i-- )
+#define fr freopen
+#define all( a ) a.begin(), a.end()
+#define rall( a ) a.rbegin(), a.rend()
+#define eb emplace_back
+#define ep emplace
+ 
+using namespace std;
+ 
+template < class X, class Y >
+bool mini( X& a, const Y& b )
+{
+    if ( a > b ) { a = b; return 1; } return 0;
+}
+ 
+template < class X, class Y >
+bool maxi( X& a, const Y& b )
+{
+    if ( a < b ) { a = b; return 1; } return 0;
+}
+ 
+typedef const int& ci;
+typedef long long ll;
+typedef pair < int, int > pii;
+ 
+const int N = 1e4+1, A = 33000;
+ 
+struct event
+{
+    int x,l,r,type;
+};
+ 
+struct node
+{
+    int cnt = 0, len = 0;
+};
+ 
+int n,as;
+event a[N<<1];
+node t[A<<2];
+ 
+void enter()
+{
+    cin >> n;
+    int x1,y1,x2,y2;
+    foru( i, 1, n )
+    {
+        cin >> x1 >> y1 >> x2 >> y2;
+        if ( ++y1 > y2 )
+            continue;
+        a[++as] = { x1, y1, y2, 1 };
+        a[++as] = { x2, y1, y2, -1 };
+    }
+}
+ 
+void modify( int x, int l, int r, int Lx, int Rx, int delta )
+{
+    if ( Rx < l || Lx > r )
+        return;
+    if ( l <= Lx && Rx <= r )
+        t[x].cnt += delta;
+    else
+    {
+        int m = ( Lx + Rx ) >> 1;
+        modify( x<<1, l, r, Lx, m, delta );
+        modify( x<<1|1, l, r, m+1, Rx, delta );
+    }
+    if ( !t[x].cnt )
+        t[x].len = t[x<<1].len + t[x<<1|1].len;
+    else
+        t[x].len = Rx - Lx + 1;
+}
+ 
+void solve()
+{
+    sort( a+1, a+as+1, [&]( event& l, event& r ) -> bool
+    {
+        return l.x < r.x || ( l.x == r.x && l.type < r.type );
+    });
+    ll res = 0;
+    foru( i, 1, as )
+    {
+        res += t[1].len * ( a[i].x - a[i-1].x );
+        modify( 1, a[i].l, a[i].r, 1, 3e4, a[i].type );
+    }
+    cout << res;
+}
+ 
+int main()
+{
+    #define haid "1."
+ 
+    ios_base :: sync_with_stdio( false ); cin.tie( 0 );
+    #ifndef ONLINE_JUDGE
+    fr( haid"INP", "r", stdin );
+    fr( "2.out", "w", stdout );
+    #endif
+    enter();
+    solve();
+}
