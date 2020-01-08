@@ -1,0 +1,186 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <algorithm>
+#include <math.h>
+#include <string.h>
+#include <limits.h>
+#include <numeric>
+#include <tuple>
+#include <vector>
+#include <queue>
+#include <stack>
+#include <map>
+#include <set>
+#include <array>
+#include <bitset>
+#include <unordered_map>
+
+#define foru( i, a, b ) for( int i = a; i <= b; i++ )
+#define ford( i, a, b ) for( int i = a; i >= b; i-- )
+#define all( a ) a.begin(), a.end()
+#define rall( a ) a.rbegin(), a.rend()
+#define fr freopen
+#define eb emplace_back
+#define ep emplace
+
+using namespace std;
+
+template < class X, class Y >
+bool mini( X& a, const Y& b )
+{
+    if ( a > b ) { a = b; return 1; } return 0;
+}
+
+template < class X, class Y >
+bool maxi( X& a, const Y& b )
+{
+    if ( a < b ) { a = b; return 1; } return 0;
+}
+
+typedef const int& ci;
+typedef long long ll;
+typedef pair < int, int > pii;
+typedef vector < int > bnum;
+
+const int base = 1e9;
+
+void operator += ( bnum& res, const bnum& b )
+{
+    res.resize( max( res.size(), b.size() ) );
+    ll hold = 0;
+    foru( i, 0, res.size()-1 )
+    {
+        hold += res[i];
+        if ( i < b.size() ) hold += b[i];
+        res[i] = hold % base;
+        hold /= base;
+    }
+    if ( hold ) res.eb( hold );
+}
+
+bnum operator * ( bnum& a, int x )
+{
+    bnum res( a.size() + 1 );
+    foru( i, 0, a.size()-1 )
+    {
+        ll hold = 0;
+        for( int j = 0; j < 1 || hold; j++ )
+        {
+            hold += res[i+j] + 1ll*a[i]*( j < 1 ? x : 0 );
+            res[i+j] = hold % base;
+            hold /= base;
+        }
+    }
+    while ( res.size() > 1 && !res.back() )
+        res.pop_back();
+    return res;
+}
+
+const int N = 101;
+
+int n,k;
+char s[] = { '(', ')', '[', ']', '{', '}' };
+char a[N];
+char trc[N];
+bnum dp[N][N][2];
+
+void enter()
+{
+    cin >> n >> k >> a + 1;
+}
+
+void calc( int i, int c, bool ok )
+{
+    auto& res = dp[i][c][ok];
+    if ( res.size() > 0 ) return;
+    if ( i == n )
+    {
+        res = { !c && ok };
+        return;
+    }
+    res = { 0 };
+    if ( ok )
+    {
+        if ( c < k )
+        {
+            calc( i+1, c+1, ok );
+            res += dp[i+1][c+1][ok] * 3;
+        }
+        if ( c > 0 )
+        {
+            calc( i+1, c-1, ok );
+            res += dp[i+1][c-1][ok];
+        }
+    }
+    else
+    {
+        int pos = find( s, s+6, a[i+1] ) - s;
+        for( int j = 0, cnt = 0; true; j++ )
+        {
+            if ( s[j] == a[i+1] )
+            {
+                if ( c < k )
+                {
+                    if ( cnt )
+                    {
+                        calc( i+1, c+1, true );
+                        res = dp[i+1][c+1][1] * cnt;
+                    }
+                    if ( ~pos & 1 )
+                    {
+                        calc( i+1, c+1, false );
+                        res += dp[i+1][c+1][0];
+                    }
+                }
+                break;
+            }
+            if( ~j & 1 ) cnt++;
+        }
+        if ( c > 0 && trc[i+1] <= a[i+1] )
+        {
+            calc( i+1, c-1, trc[i+1] < a[i+1] );
+            res += dp[i+1][c-1][trc[i+1] < a[i+1]];
+        }
+    }
+}
+
+void print( bnum& a )
+{
+    printf( "%d", a.back() );
+    for( int i = a.size()-1; --i >= 0; )
+        printf( "%09d", a[i] );
+}
+
+void solve()
+{
+    trc[0] = ')';
+    stack < char > st;
+    foru( i, 1, n )
+    {
+        int j = find( s, s+6, a[i] ) - s;
+        if ( st.size() )
+            trc[i] = s[find( s, s+6, st.top() )-s+1];
+        if ( j & 1 )
+            st.pop();
+        else
+            st.ep( a[i] );
+    }
+    calc( 0, 0, 0 );
+    dp[0][0][0] += { 1 };
+    print( dp[0][0][0] );
+}
+
+int main()
+{
+    #define haid "."
+
+    ios_base :: sync_with_stdio( false ); cin.tie( 0 );
+    #ifndef ONLINE_JUDGE
+    fr( haid"INP", "r", stdin );
+
+    #endif
+    enter();
+    solve();
+}
